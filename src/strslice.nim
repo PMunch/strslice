@@ -17,7 +17,7 @@ type
 
 proc `$`*(str: StringSlice): string =
   ## Converts a string slice to a string
-  if str == nil or str.str == nil: nil
+  if str == nil or str.str == nil: ""
   else: str.str[str.start .. str.stop]
 
 proc newStringSlice*(str: string): StringSlice {.noInit.} =

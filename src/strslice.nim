@@ -11,9 +11,9 @@ import strutils
 
 type
   StringSlice* = ref object
-    str: ref string
-    start: int
-    stop: int
+    str*: ref string
+    start*: int
+    stop*: int
 
 proc `$`*(str: StringSlice): string =
   ## Converts a string slice to a string

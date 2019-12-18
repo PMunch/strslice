@@ -96,25 +96,25 @@ proc find*(a: SkipTable, s: StringSlice, sub: string,
   start: Natural = 0, last: Natural = 0): int =
   ## Finds a string in a string slice. Calls the similar procedure from
   ## ``strutils`` but with updated start and last references.
-  max(-1,
-    strutils.find(a, s.str[], sub, start + s.start, last + s.stop) - s.start
-  )
+  result = strutils.find(a, s.str[], sub, start + s.start, last + s.start) - s.start
+  if result < 0 or result > s.stop - sub.high:
+    result = -1
 
 proc find*(s: StringSlice, sub: char,
   start: Natural = 0, last: Natural = 0): int =
   ## Finds a string in a string slice. Calls the similar procedure from
   ## ``strutils`` but with updated start and last references.
-  max(-1,
-    strutils.find(s.str[], sub, start + s.start, last + s.stop) - s.start
-  )
+  result = strutils.find(s.str[], sub, start + s.start, last + s.start) - s.start
+  if result < 0 or result > s.stop:
+    result = -1
 
 proc find*(s: StringSlice, sub: string,
   start: Natural = 0, last: Natural = 0): int =
   ## Finds a string in a string slice. Calls the similar procedure from
   ## ``strutils`` but with updated start and last references.
-  max(-1,
-    strutils.find(s.str[], sub, start + s.start, last + s.stop) - s.start
-  )
+  result = strutils.find(s.str[], sub, start + s.start, s.start + (if last == 0: s.stop - s.start else: last)) - s.start
+  if result < 0 or result > s.stop - sub.high:
+    result = -1
 
 proc find*(s: StringSlice, sub: StringSlice,
   start: Natural = 0, last: Natural = 0): int =
@@ -123,7 +123,7 @@ proc find*(s: StringSlice, sub: StringSlice,
   ## only the indices. Otherwise it will convert the string slice to find into
   ## a regular string and call the normal find operation.
   if s.str == sub.str:
-    if sub.start + start >= s.start and min(sub.stop, last) <= s.stop:
+    if sub.start >= s.start + start and sub.stop - s.start <= s.stop - (s.start + last):
       sub.start - s.start
     else:
       -1
@@ -159,8 +159,34 @@ when isMainModule:
     s3 = s2[6 .. ^1]
     s4 = s2[2 .. ^1]
 
-  echo s1.find("world")
-  echo s2.find("world")
-  echo s3.find("world")
-  echo s2.find(s3)
-  echo s3.find(s4)
+  assert s1.find("world") == 6
+  assert s2.find("world") == 6
+  assert s3.find("world") == 0
+  echo "HERE: ", s2.find(s3)
+  echo s2
+  echo s3
+  assert s2.find(s3) == 6
+  assert s2.find(s3, last = 8) == s1.find($s3, last = 8)
+  assert s2.find(s3, start = 8) == s1.find($s3, start = 8)
+  assert s3.find(s4) == -1
+
+  var
+    s = "0123456789"
+    ss = s.toStringSlice
+    upToFour = ss[0..4]
+    upToFive = ss[0..5]
+    upToSix = ss[0..6]
+    threeToFive = ss[3..5]
+
+  assert s.find("123", last = 5) == ss.find("123", last = 5)
+  assert s.find("456", last = 5) == ss.find("456", last = 5)
+  assert s.find("789", last = 5) == s.find("789", last = 5)
+  assert s.find("123", start = 2) == ss.find("123", start = 2)
+  assert s.find("123", start = 2, last = 5) == ss.find("123", start = 2, last = 5)
+
+  assert s.find("456") != upToFive.find("456")
+  assert upToFive.find("456") == -1
+  assert s.find("456") == upToSix.find("456")
+
+  assert s.find("4") == threeToFive.find("4") + 3
+  assert upToFour.find(threeToFive) == -1

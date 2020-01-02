@@ -81,7 +81,6 @@ proc startsWith*[T: StringSlice or string](str: StringSlice, sub: T): bool =
 proc `==`*[T: StringSlice or string](str: StringSlice, cmp: T): bool =
   ## Compare a string slice to a string or another string slice. Returns true
   ## if they are both identical.
-  if cmp.isNil():        return false
   if str.len != cmp.len: return false
   when T is StringSlice:
     for i in cmp.start..cmp.stop:
@@ -190,3 +189,5 @@ when isMainModule:
 
   assert s.find("4") == threeToFive.find("4") + 3
   assert upToFour.find(threeToFive) == -1
+
+  echo s2 == s1
